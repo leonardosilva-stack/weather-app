@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { WeatherDatas } from 'src/app/models/interfaces/weatherDatas.interface';
+import * as opencage from 'opencage-api-client';
 
 @Injectable({
   providedIn: 'root',
@@ -16,4 +17,6 @@ export class WeatherService {
       `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&mode=json&appid=${this.apiKey}`
     );
   }
+
+
 }
