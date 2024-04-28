@@ -1,0 +1,34 @@
+<div class="content mt-4 p-4">
+  <div class="col">
+    <p class="uppercase">{{ currentWeekday }}</p>
+    <p class="">{{ weatherDatas.main.temp | number:"1.0-0"}}ºC</p>
+  </div>
+
+  <div class="col">
+    <div class="items-container">
+      <span class="white">Sensação: </span>
+      <span class="blue">{{ weatherDatas.main.feels_like | number:"1.0-0"}}ºC</span>
+      <span class="white">Humidade: </span>
+      <span class="blue">{{ weatherDatas.main.humidity | number:"1.0-0"}}%</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="items-container">
+      <span class="white">Vento: </span>
+      <span class="blue">{{ weatherDatas.wind.speed}}Km/h</span>
+      <span class="white">Pressão: </span>
+      <span class="blue">{{ weatherDatas.main.pressure | number:"1.0-0"}}MB</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>{{ currentHourMinuteSecond }}</p>
+    <div class="items-container">
+      <span class="white">Nascer do Sol: </span>
+      <span class="blue">{{ formatTime(weatherDatas.sys.sunrise) }}</span>
+      <span class="white">Por do Sol: </span>
+      <span class="blue">{{ formatTime(weatherDatas.sys.sunset) }}</span>
+    </div>
+  </div>
+</div>

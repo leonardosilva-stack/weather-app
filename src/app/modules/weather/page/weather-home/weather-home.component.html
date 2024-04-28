@@ -1,104 +1,15 @@
 <div *ngIf="weatherDatas" class="background-image" [ngStyle]="{'background-image': backgroundImageUrl}">
+
   <div class="container p-4">
 
-    <div class="flex justify-between items-center">
-      <div class="flex gap-1">
-        <fa-icon [icon]="pinIcon" size="3x"></fa-icon>
-        <h1 class="title">{{ weatherDatas.name }}, {{weatherDatas.sys.country}}</h1>
-      </div>
-
-      <form class="search-container" #form="ngForm" (submit)="onSubmit()">
-        <div class="flex items-center position-relative">
-          <fa-icon [icon]="searchIcon" class="search-icon"></fa-icon>
-          <input name="city" type="text" placeholder="Buscar localização" class="search-input"
-            [(ngModel)]="initialCityName">
-        </div>
-      </form>
-    </div>
-
-    <div class="content mt-4 p-4">
-
-      <div class="col">
-        <p class="uppercase">{{ currentWeekday }}</p>
-        <p class="">{{ weatherDatas.main.temp | number:"1.0-0"}}ºC</p>
-      </div>
+    <app-header [cityName]="weatherDatas.name" [countryCode]="weatherDatas.sys.country"
+      (formSubmitted)="onFormSubmit($event)"></app-header>
 
 
-      <div class="col">
-        <div class="items-container">
-          <span class="white">Sensação: </span> <span class="blue">{{ weatherDatas.main.feels_like |
-            number:"1.0-0"}}ºC</span>
-          <span class="white">Humidade: </span> <span class="blue">{{ weatherDatas.main.humidity |
-            number:"1.0-0"}}%</span>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="items-container">
-          <span class="white">Vento: </span> <span class="blue">{{ weatherDatas.wind.speed}}Km/h</span>
-          <span class="white">Pressão: </span> <span class="blue">{{ weatherDatas.main.pressure |
-            number:"1.0-0"}}MB</span>
-        </div>
-
-      </div>
+    <app-weather-info [weatherDatas]="weatherDatas"></app-weather-info>
 
 
-      <div class="col">
-        <p>{{ currentHourMinute }}</p>
-        <div class="items-container">
-          <span class="white">Nascer do Sol: </span><span class="blue">{{ formatTime(weatherDatas.sys.sunrise) }}</span>
-          <span class="white">Por do Sol: </span> <span class="blue">{{ formatTime(weatherDatas.sys.sunset) }}</span>
-        </div>
-      </div>
-
-    </div>
-
-
-    <div class="footer flex justify-between">
-      <div class="card">
-        <span class="white">Qualidade do Ar</span>
-        <img src="../../../../../assets/icones/air-quality.png" alt="Air Quality">
-        <span class="white">{{ weatherDatas.wind.deg}}</span>
-      </div>
-
-      <div class="card">
-        <span class="white">Velocidade</span>
-        <img src="../../../../../assets/icones/wind.png" alt="Air Quality">
-        <span class="white">{{ weatherDatas.wind.speed}}</span>
-      </div>
-
-      <div class="card">
-        <span class="white">Visibilidade</span>
-        <img src="../../../../../assets/icones/air-quality.png" alt="Air Quality">
-        <span class="white">{{ weatherDatas.visibility}}</span>
-      </div>
-
-      <div class="card">
-        <span class="white">Humidade</span>
-        <img src="../../../../../assets/icones/humidity.png" alt="Air Quality">
-        <span class="white">{{ weatherDatas.main.humidity}}</span>
-      </div>
-    </div>
-
-
-
-
+    <app-footer [weatherDatas]="weatherDatas"></app-footer>
   </div>
+
 </div>
-
-
-
-<!-- <div class="search">
-  <form #form="ngForm" (submit)="onSubmit()">
-    <input type="text" placeholder="Buscar localização" name="city" [(ngModel)]="initialCityName">
-
-    <span (click)="onSubmit()">
-      <fa-icon animation="fade" style="--fa-animation-duration: 5s; cursor: pointer;" size="lg" class="search-icon"
-        [icon]="searchIcon"></fa-icon>
-    </span>
-  </form>
-</div> -->
-
-
-
-<!-- <app-weather-card *ngIf="weatherDatas" [weatherDatasInput]="weatherDatas"></app-weather-card> -->

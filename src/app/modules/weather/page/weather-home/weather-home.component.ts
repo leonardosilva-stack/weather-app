@@ -1,10 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { WeatherService } from '../../services/weather.service';
 import { WeatherDatas } from 'src/app/models/interfaces/weatherDatas.interface';
-import { Subject, takeUntil } from 'rxjs';
-import { faLocationPin, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import { ChangeDetectorRef } from '@angular/core';
-
+import { Subject, catchError, takeUntil, throwError } from 'rxjs';
+import { BackgroundService } from '../../services/background.service';
+import { WeatherInfoComponent } from '../../components/weather-info/weather-info.component';
 
 @Component({
   selector: 'app-weather-home',
@@ -16,165 +15,58 @@ export class WeatherHomeComponent implements OnInit, OnDestroy {
   private readonly destroy$: Subject<void> = new Subject();
   private intervalId: any;
 
-
-  pinIcon = faLocationPin;
-
-  backgroundImageUrl: string = 'url("../../../../../assets/bg/sunny-beach.jpg")';
-
-  initialCityName = 'Santos';
-  country = 'BR';
   weatherDatas!: WeatherDatas;
-  searchIcon = faMagnifyingGlass;
-  currentDateTime: string = '';
-  currentWeekday: string = '';
-  currentDay: string = '';
-  currentMonth: string = '';
-  currentYear: string = '';
-  currentHourMinute: string = '';
+  initialCityName = 'Nova York';
+  backgroundImageUrl: string = '';
+
+  @ViewChild(WeatherInfoComponent)
+  private weatherInfoComponent!: WeatherInfoComponent;
 
   constructor(
     private weatherService: WeatherService,
-    private cdRef: ChangeDetectorRef
+    private background: BackgroundService
   ) {}
 
   ngOnInit(): void {
     this.getWeatherDatas(this.initialCityName);
   }
 
-  setCurrentDateTime(): void {
-    const date = new Date();
-
-    if (this.weatherDatas) {
-      const timezoneOffset = this.getTimezoneOffset();
-
-      date.setHours(date.getHours() + timezoneOffset);
-      date.setHours(date.getHours() + 3);
-    }
-
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    };
-
-    const formattedDate = new Intl.DateTimeFormat('pt-BR', options).format(date);
-
-
-    const [datePart, timePart] = formattedDate.split(' às ');
-
-
-    const [hour, minute] = timePart.split(':');
-
-    this.currentDateTime = formattedDate;
-    this.currentWeekday = datePart.split(' ')[0].replace(',', '');
-    this.currentDay = datePart.split(' ')[1];
-    this.currentMonth = datePart.split(' ')[2];
-    this.currentYear = datePart.split(' ')[3];
-    this.currentHourMinute = `${hour}:${minute}`;
-
-    this.cdRef.detectChanges();
-  }
-
-  getTimezoneOffset(): number {
-    const offsetSeconds = this.weatherDatas.timezone;
-    const offsetHours = Math.floor(offsetSeconds / 3600);
-    const offsetMinutes = Math.floor((offsetSeconds % 3600) / 60);
-
-    return offsetHours + (offsetMinutes / 60);
-  }
-
   getWeatherDatas(cityName: string): void {
     this.weatherService.getWeatherDatas(cityName)
       .pipe(
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          if (error.status === 404) {
+            alert('Cidade não encontrada');
+          } else {
+            console.error('Erro ao obter dados meteorológicos:', error);
+            alert('Ocorreu um erro ao obter dados meteorológicos. Por favor, tente novamente mais tarde.');
+          }
+          return throwError(() => error);
+        })
       )
       .subscribe({
         next: (response) => {
           if (response) {
             this.weatherDatas = response;
-            this.setBackgroundImage();
-            this.setCurrentDateTime();
-            this.updateCurrentDateTime();
+            this.backgroundImageUrl = this.background.setBackgroundImage(this.weatherDatas);
+            this.weatherInfoComponent.setCurrentDateTime();
+            this.weatherInfoComponent.updateCurrentDateTime();
           }
-        },
-        error: (error) => console.log(error),
+        }
       });
   }
 
-  setBackgroundImage(): void {
-    const weatherDescription = this.weatherDatas.weather[0].main.toLowerCase();
-    const date = new Date();
-    const currentHour = date.getUTCHours() + this.getTimezoneOffset(); // Adiciona o offset do fuso horário
 
-    let backgroundImagePath = '';
-
-    console.log(currentHour);
-
-    if (currentHour >= 6 && currentHour < 18) {
-      switch (weatherDescription) {
-        case 'clear':
-          backgroundImagePath = '../../../../../assets/bg/day-clear-sky.jpg';
-          break;
-        case 'clouds':
-          backgroundImagePath = '../../../../../assets/bg/day-cloudy-sky.jpg';
-          break;
-        case 'rain':
-          backgroundImagePath = '../../../../../assets/bg/day-rainy.jpg';
-          break;
-        case 'snow':
-          backgroundImagePath = '../../../../../assets/bg/day-snowy-mountains.jpg';
-          break;
-        default:
-          backgroundImagePath = '../../../../../assets/bg/sunny-beach.jpg';
-          break;
-      }
-    } else {
-      switch (weatherDescription) {
-        case 'clear':
-          backgroundImagePath = '../../../../../assets/bg/night-clear-sky.jpg';
-          break;
-        case 'clouds':
-          backgroundImagePath = '../../../../../assets/bg/night-cloudy-sky.jpg';
-          break;
-        case 'rain':
-          backgroundImagePath = '../../../../../assets/bg/night-rainy.jpg';
-          break;
-        case 'snow':
-          backgroundImagePath = '../../../../../assets/bg/night-snow.jpg';
-          break;
-        default:
-          backgroundImagePath = '../../../../../assets/bg/sunny-beach.jpg';
-          break;
-      }
+  onFormSubmit(cityName: string): void {
+    if (!cityName || cityName.trim() === '') {
+      alert('Por favor, insira um nome de cidade válido');
+      return;
     }
 
-    this.backgroundImageUrl = `url("${backgroundImagePath}")`;
-  }
-
-
-  updateCurrentDateTime(): void {
-    this.setCurrentDateTime();
-    this.intervalId = setInterval(() => {
-      this.setCurrentDateTime();
-
-    }, 60000);
-  }
-
-  formatTime(timestamp: number): string {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  }
-
-
-  onSubmit(): void {
+    this.initialCityName = cityName.trim();
     this.getWeatherDatas(this.initialCityName);
-    this.initialCityName = '';
   }
-
   ngOnDestroy(): void {
     clearInterval(this.intervalId);
     this.destroy$.next();
